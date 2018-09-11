@@ -3,4 +3,5 @@
  main.c  \
 config.h  \
 uart.h  \
+adc.h  \
 delay.h 

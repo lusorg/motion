@@ -5,7 +5,7 @@
  * Created on September 18, 2015, 5:20 PM
  */
 
-#define _XTAL_FREQ 32000000
+#define _XTAL_FREQ 8000000
 
 void delay_us(int repeat_1){
     while(repeat_1--){

@@ -5,12 +5,9 @@
  * Created on September 18, 2015, 12:39 PM
  */
 
-#include "config.h"
-
-
-
 #define UART_buf_size  16
-unsigned char UART_buffer[UART_buf_size] = {"1234567890123456"};
+/*volatile unsigned*/ char UART_buffer[UART_buf_size];
+unsigned char UART_Buffer_Ptr = 0;
 
 void UART_Init() {
     // Enable interrupt
@@ -30,7 +27,7 @@ void UART_Init() {
 
     BAUDCONbits.BRG16 = 0b0; // 8 bit generator baud
     BAUDCONbits.ABDEN = 0b0; // Disable auto baud
-    SPBRG = 12;
+    SPBRG = 51;
 }
 
 void UART_Write_byte(unsigned char data) {
@@ -39,25 +36,35 @@ void UART_Write_byte(unsigned char data) {
 }
 
 void UART_Write_Text(unsigned char *text) {
-    int i;
-
-    for (i = 0; text[i] != '\0'; i++)
+    for (int i = 0; text[i] != '\0'; i++)
         UART_Write_byte(text[i]);
 }
 
 void UART_clean_buffer() {
-    /*int i = 0;
-    for (i = 0; i < UART_buf_size; i++)
-        UART_buffer[i] = (unsigned char) "-";
-    */
-    memset(UART_buffer,0,sizeof(UART_buffer));
+    memset(UART_buffer, 45, sizeof (UART_buffer));
+    UART_Buffer_Ptr = 0;
 }
 
 void interrupt UART_add_buffer() {
     //char byte_rx = RCREG;
-    // SHIFT ALL BUFFER  
-    for (int i = 0; i < UART_buf_size - 1; i++) {
-        UART_buffer[i] = UART_buffer[i + 1];
+    // SHIFT ALL BUFFER
+    
+    if (PIR1bits.RCIF) {
+        /*
+        
+        for (int i = 0; i < UART_buf_size - 1; i++) {
+            UART_buffer[i] = (unsigned char)UART_buffer[i + 1];
+        }
+        UART_buffer[UART_buf_size - 1] = RCREG;
+         */
+        
+        UART_buffer[UART_Buffer_Ptr] = RCREG;
+        UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr + (unsigned char)1);
+        if (UART_Buffer_Ptr == UART_buf_size)
+            UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr - (unsigned char)1); // STATURATION
+        
+        PIR1bits.RCIF = 0;
+         
     }
-    UART_buffer[UART_buf_size - 1] = RCREG;
+    
 }

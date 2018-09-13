@@ -5,36 +5,56 @@
  * Created on June 10, 2018, 11:36 PM
  */
 #include <xc.h>
-#include <p18f1330.h>
 #include <string.h> 
-//#include <stdio.h>
 #include <stdlib.h>
 
 #include "config.h"
-//#include "delay.h"
+#include "delay.h"
 #include "uart.h"
 #include "adc.h"
 
-unsigned char status;
-unsigned char old_status;
+#define RF_M0 LATBbits.LB0
+#define RF_M1 LATBbits.LB1
+
+#define LED_1 LATAbits.LATA0 
+#define LED_2 LATBbits.LATB3
+
+#define MOTION_1 PORTBbits.RB2 
+#define MOTION_2 PORTAbits.RA7
+
+#define AC_POWER PORTAbits.RA1
+
+#define EXTRA LATB5 
+#define SIREN LATB4 
+
+unsigned char Motion_1_OldStatus;
+unsigned char Motion_2_OldStatus;
+unsigned char AC_Power_OldStatus;
 
 void main(void) {
 
     // IO Configuration
     TRISAbits.RA0 = 0b0; // Led 1 output
     TRISAbits.RA1 = 0b1; // Main Power Fail input
-    TRISAbits.RA4 = 0b1; // Aux Read from RF Module
-    TRISAbits.RA2 = 0b0; // UART TX output
+    TRISAbits.RA2 = 0b1; // UART TX output
     TRISAbits.RA3 = 0b1; // UART RX input
+    TRISAbits.RA4 = 0b1; // Aux Read from RF Module
+
+    TRISAbits.RA6 = 0b1; // Motion 3 Input
+    TRISAbits.RA7 = 0b1; // Motion 2 Input
+
     TRISBbits.RB0 = 0b0; // CONFIG MO RF Module
     TRISBbits.RB1 = 0b0; // CONFIG M1 RF Module
-
-    TRISBbits.RB3 = 0b0; // Led 2 output
     TRISBbits.RB2 = 0b1; // Motion 1 Input
-    TRISAbits.RA7 = 0b1; // Motion 2 Input
-    TRISAbits.RA6 = 0b1; // Motion 3 Input
+    TRISBbits.RB3 = 0b0; // Led 2 output
+    TRISBbits.RB4 = 0b0; // Siren Output   
     TRISBbits.RB5 = 0b0; // Extra Output
-    TRISBbits.RB4 = 0b0; // Siren Output
+
+    // A/D Port Configuration bit 
+    ADCON1bits.PCFG3 = 0b0; //for RA6/AN3
+    ADCON1bits.PCFG2 = 0b1; //for RA4/AN2
+    ADCON1bits.PCFG1 = 0b1; //for RA1/AN1
+    ADCON1bits.PCFG0 = 0b1; //for RA0/AN0
 
     //Set Frequency to 8Mhz
     OSCCONbits.IRCF0 = 0b1;
@@ -42,15 +62,12 @@ void main(void) {
     OSCCONbits.IRCF2 = 0b1;
 
     //Enable PLL  - Frequency 8Mhz x 4(PLL)
-    OSCTUNEbits.PLLEN = 0b0;
+    OSCTUNEbits.PLLEN = 1;
 
     UART_Init();
     UART_clean_buffer();
 
     ADC_Init();
-
-    status = 0;
-    old_status = 0;
 
     // READ FROM PORT
     // Write to LAT
@@ -71,85 +88,57 @@ void main(void) {
     LED_2 = 0;
     delay_ms(1);
 
-    UART_Write_Text((unsigned char *)"Hello World");
+    UART_Write_Text((unsigned char *) "Hello World\n");
 
     while (1) {
 
-        if (strstr(UART_buffer, "BAT") != NULL) {
+        if (strstr(UART_buffer, "BAT-------------") != NULL) {
             UART_clean_buffer();
-            UART_Write_Text((unsigned char *)"ADC VALUE:");
-            unsigned char buffer[10] = "---------\0";
+            UART_Write_Text((unsigned char *) "ADC VALUE:");
+            unsigned char buffer[10];
             unsigned int adcValue;
-
             adcValue = ADC_Get();
             itoa(buffer, adcValue, 10);
             UART_Write_Text(buffer);
-            UART_Write_Text((unsigned char *)"\r\n");
-        }
-
-        if (MOTION_1) {
-            LED_2 = 1;
-            status = (unsigned char)(status | (unsigned char)0b00000001);
-        } else {
-            LED_2 = 0;
-            status = (unsigned char)(status & (unsigned char)0b00001110);
-        }
-
-        if (MOTION_2) {
-            status = (unsigned char)(status | (unsigned char)0b00000010);
-        } else {
-            status = (unsigned char)(status & (unsigned char)0b00001101);
-        }
-
-        if (strstr(UART_buffer, "LEDON") != NULL) {
+            UART_Write_Text((unsigned char *) "\n");
+        } else if (strstr(UART_buffer, "LEDON") != NULL) {
             UART_clean_buffer();
             LED_1 = 1;
-            status = (unsigned char)(status | (unsigned char)0b00000100);
-        }
-        if (strstr(UART_buffer, "LEDOFF") != NULL) {
+            UART_Write_Text((unsigned char *) "LED ON\n");
+        } else if (strstr(UART_buffer, "LEDOFF") != NULL) {
             UART_clean_buffer();
             LED_1 = 0;
-            status = (unsigned char)(status & (unsigned char)0b00001011);
+            UART_Write_Text((unsigned char *) "LED OFF\n");
         }
 
-        if (AC_POWER) {
-            status = (unsigned char)(status | (unsigned char)0b00001000);
-        } else {
-            status = (unsigned char)(status & (unsigned char)0b00000111);
+        if (MOTION_1 != Motion_1_OldStatus) {
+            Motion_1_OldStatus = MOTION_1;
+            if (MOTION_1) {
+                UART_Write_Text((unsigned char *) "MOTION 1 DETECTED\n");
+                LED_2 = 1;
+            } else {
+                UART_Write_Text((unsigned char *) "MOTION 1 NO MOVEMENT\n");
+                LED_2 = 0;
+            }
         }
 
-        if (old_status != status) {
-            UART_Write_Text((unsigned char *)"STATUS:\r\n");
-
-            /*-------------------------------------------------------*/
-            if ((status & 0b00000001) == 0b00000001) {
-                UART_Write_Text((unsigned char *)"MOTION 1 DETECTED\r\n");
+        if (MOTION_2 != Motion_2_OldStatus) {
+            Motion_2_OldStatus = MOTION_2;
+            if (MOTION_2) {
+                UART_Write_Text((unsigned char *) "MOTION 2 DETECTED\n");
             } else {
-                UART_Write_Text((unsigned char *)"MOTION 1 NOT DETECTED\r\n");
+                UART_Write_Text((unsigned char *) "MOTION 2 no movement\n");
             }
-            /*-------------------------------------------------------*/
-            if ((status & 0b00000010) == 0b00000010) {
-                UART_Write_Text((unsigned char *)"MOTION 2 DETECTED\r\n");
-            } else {
-                UART_Write_Text((unsigned char *)"MOTION 2 NOT DETECTED\r\n");
-            }
-            /*-------------------------------------------------------*/
-            if ((status & 0b00000100) == 0b00000100) {
-                UART_Write_Text((unsigned char *)"LED ON\r\n");
-            } else {
-                UART_Write_Text((unsigned char *)"LED OFF\r\n");
-            }
-            /*-------------------------------------------------------*/
-            if ((status & 0b00001000) == 0b00001000) {
-                UART_Write_Text((unsigned char *)"AC_POWER ON\r\n");
-            } else {
-                UART_Write_Text((unsigned char *)"AC_POWER OFF\r\n");
-            }
-            /*-------------------------------------------------------*/
-            UART_Write_Text((unsigned char *)"--------\r\n");
-            old_status = status;
         }
 
+        if (AC_POWER != AC_Power_OldStatus) {
+            AC_Power_OldStatus = AC_POWER;
+            if (AC_POWER) {
+                UART_Write_Text((unsigned char *) "AC POWER\n");
+            } else {
+                UART_Write_Text((unsigned char *) "DC POWER\n");
+            }
+        }
     }
 
 }

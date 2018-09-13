@@ -24,7 +24,7 @@
 
 // CONFIG3H
 #pragma config FLTAMX = RA5     // FLTA Mux bit (FLTA input is muxed onto RA5)
-#pragma config T1OSCMX = LOW    // T1OSO/T1CKI MUX bit (T1OSO/T1CKI pin resides on RB2)
+#pragma config T1OSCMX = HIGH    // T1OSO/T1CKI MUX bit (T1OSO/T1CKI pin resides on RA6)
 #pragma config MCLRE = OFF      // Master Clear Enable bit (RA5 input pin enabled, MCLR pin disabled)
 
 // CONFIG4L
@@ -59,20 +59,5 @@
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
-#include <xc.h>
-
-#define RF_M0 LATB0
-#define RF_M1 LATB1 
-
-#define LED_1 LATA0
-#define LED_2 LATB3  
-
-#define MOTION_1 PORTBbits.RB2 
-#define MOTION_2 PORTAbits.RA7
-
-#define AC_POWER PORTAbits.RA1
-
-#define EXTRA LATB5 
-#define SIREN LATB4 
 
 

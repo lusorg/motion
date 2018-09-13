@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Motion</name>
-            <creation-uuid>bb6ca954-990e-4a86-8bf4-36eaf644ecbd</creation-uuid>
+            <name>motion</name>
+            <creation-uuid>3b67e5ae-94f4-42b5-99fd-f0d04a182b63</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>

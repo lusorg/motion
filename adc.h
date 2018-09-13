@@ -5,10 +5,6 @@
  * Created on September 18, 2015, 12:39 PM
  */
 
-#include "config.h"
-#include "delay.h"
-
-
 void ADC_Init()
  {
     //AN3 Channel Selection 

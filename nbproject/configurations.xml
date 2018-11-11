@@ -8,6 +8,8 @@
       <itemPath>config.h</itemPath>
       <itemPath>delay.h</itemPath>
       <itemPath>uart.h</itemPath>
+      <itemPath>defines.h</itemPath>
+      <itemPath>ic.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

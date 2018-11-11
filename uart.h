@@ -36,8 +36,11 @@ void UART_Write_byte(unsigned char data) {
 }
 
 void UART_Write_Text(unsigned char *text) {
-    for (int i = 0; text[i] != '\0'; i++)
-        UART_Write_byte(text[i]);
+    unsigned char toSend;
+    for (int i = 0; text[i] != '\0'; i++){
+        toSend = text[i];
+        UART_Write_byte(toSend);
+    }
 }
 
 void UART_clean_buffer() {
@@ -48,7 +51,7 @@ void UART_clean_buffer() {
 void interrupt UART_add_buffer() {
     //char byte_rx = RCREG;
     // SHIFT ALL BUFFER
-    
+    LED_BLUE = 1;
     if (PIR1bits.RCIF) {
         /*
         
@@ -66,5 +69,5 @@ void interrupt UART_add_buffer() {
         PIR1bits.RCIF = 0;
          
     }
-    
+    LED_BLUE = 0;
 }

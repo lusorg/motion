@@ -36,7 +36,7 @@ void ADC_Init()
 
 unsigned int ADC_Get(){
     ADCON0bits.ADON = 0b1;
-    delay_ms(1);
+    delay_ms(10);
     ADCON0bits.GO_DONE = 1;
     while(ADCON0bits.GO_DONE == 1);
     unsigned int advalue = (unsigned int)(((unsigned char)ADRESH << 8) + (unsigned char)ADRESL);

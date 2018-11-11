@@ -3459,8 +3459,11 @@ TXREG = data;
 }
 
 void UART_Write_Text(unsigned char *text) {
-for (int i = 0; text[i] != '\0'; i++)
-UART_Write_byte(text[i]);
+unsigned char toSend;
+for (int i = 0; text[i] != '\0'; i++){
+toSend = text[i];
+UART_Write_byte(toSend);
+}
 }
 
 void UART_clean_buffer() {
@@ -3471,10 +3474,10 @@ UART_Buffer_Ptr = 0;
 void interrupt UART_add_buffer() {
 
 
-
+LATAbits.LATA0 = 1;
 if (PIR1bits.RCIF) {
 
-# 61
+# 64
 UART_buffer[UART_Buffer_Ptr] = RCREG;
 UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr + (unsigned char)1);
 if (UART_Buffer_Ptr == 16)
@@ -3483,7 +3486,7 @@ UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr - (unsigned cha
 PIR1bits.RCIF = 0;
 
 }
-
+LATAbits.LATA0 = 0;
 }
 
 # 8 "adc.h"
@@ -3515,7 +3518,7 @@ ADCON2bits.ADCS0 = 0b0;
 
 unsigned int ADC_Get(){
 ADCON0bits.ADON = 0b1;
-delay_ms(1);
+delay_ms(10);
 ADCON0bits.GO_DONE = 1;
 while(ADCON0bits.GO_DONE == 1);
 unsigned int advalue = (unsigned int)(((unsigned char)ADRESH << 8) + (unsigned char)ADRESL);
@@ -3523,13 +3526,8 @@ ADCON0bits.ADON = 0b0;
 return advalue;
 }
 
-# 30 "main.c"
-unsigned char Motion_1_OldStatus;
-unsigned char Motion_2_OldStatus;
-unsigned char AC_Power_OldStatus;
-
-void main(void) {
-
+# 2 "ic.h"
+void IC_Init(){
 
 TRISAbits.RA0 = 0b0;
 TRISAbits.RA1 = 0b1;
@@ -3561,78 +3559,176 @@ OSCCONbits.IRCF2 = 0b1;
 
 OSCTUNEbits.PLLEN = 1;
 
-UART_Init();
-UART_clean_buffer();
 
-ADC_Init();
+LATBbits.LATB0 = 0b0;
+LATBbits.LATB1 = 0b0;
 
-# 76
-LATBbits.LB0 = 0b0;
-LATBbits.LB1 = 0b0;
+LATBbits.LATB4 = 0b0;
+LATBbits.LATB5 = 0b0;
+}
 
-LATAbits.LATA0 = 0;
-LATBbits.LATB3 = 0;
-delay_ms(1);
-delay_s(1);
-delay_us(1);
-LATAbits.LATA0 = 1;
-LATBbits.LATB3 = 1;
-delay_ms(1);
-LATAbits.LATA0 = 0;
-LATBbits.LATB3 = 0;
-delay_ms(1);
+# 18 "main.c"
+char state = 0;
+char old_state = 0b10000000;
+bit AC_POWER_old = 0b0;
 
-UART_Write_Text((unsigned char *) "Hello World\n");
+void send_Status() {
 
-while (1) {
-
-if (strstr(UART_buffer, "BAT-------------") != (0)) {
-UART_clean_buffer();
-UART_Write_Text((unsigned char *) "ADC VALUE:");
 unsigned char buffer[10];
 unsigned int adcValue;
+unsigned int batValue;
 adcValue = ADC_Get();
-itoa(buffer, adcValue, 10);
+
+unsigned long temp = ((unsigned long) adcValue * (unsigned long) 5000);
+batValue = temp / 1023;
+itoa(buffer, batValue, 10);
 UART_Write_Text(buffer);
-UART_Write_Text((unsigned char *) "\n");
-} else if (strstr(UART_buffer, "LEDON") != (0)) {
-UART_clean_buffer();
-LATAbits.LATA0 = 1;
-UART_Write_Text((unsigned char *) "LED ON\n");
-} else if (strstr(UART_buffer, "LEDOFF") != (0)) {
-UART_clean_buffer();
-LATAbits.LATA0 = 0;
-UART_Write_Text((unsigned char *) "LED OFF\n");
+
+if ((state & 0b00010000) == 0b00010000) {
+UART_Write_Text((unsigned char *) "|ON|");
+} else {
+UART_Write_Text((unsigned char *) "|OFF|");
 }
 
-if (PORTBbits.RB2 != Motion_1_OldStatus) {
-Motion_1_OldStatus = PORTBbits.RB2;
-if (PORTBbits.RB2) {
-UART_Write_Text((unsigned char *) "MOTION 1 DETECTED\n");
-LATBbits.LATB3 = 1;
+if ((state & 0b00001000) == 0b00001000) {
+UART_Write_Text((unsigned char *) "ON|");
 } else {
-UART_Write_Text((unsigned char *) "MOTION 1 NO MOVEMENT\n");
+UART_Write_Text((unsigned char *) "OFF|");
+}
+
+if ((state & 0b00000100) == 0b00000100) {
+UART_Write_Text((unsigned char *) "AC|");
+} else {
+UART_Write_Text((unsigned char *) "DC|");
+}
+
+if ((state & 0b00000010) == 0b00000010) {
+UART_Write_Text((unsigned char *) "ON|");
+} else {
+UART_Write_Text((unsigned char *) "OFF|");
+}
+
+if ((state & 0b00000001) == 0b00000001) {
+UART_Write_Text((unsigned char *) "ON");
+} else {
+UART_Write_Text((unsigned char *) "OFF");
+}
+
+
+
+
+}
+
+void main(void) {
+
+
+
+
+IC_Init();
+UART_Init();
+ADC_Init();
+
+LATBbits.LATB4 = 1;
+delay_ms(50);
+LATBbits.LATB4 = 0;
+
+LATAbits.LATA0 = 1;
+LATBbits.LATB3 = 0;
+LATBbits.LATB5 = 1;
+delay_s(1);
+LATAbits.LATA0 = 0;
+LATBbits.LATB3 = 1;
+LATBbits.LATB5 = 0;
+delay_s(1);
+LATAbits.LATA0 = 1;
+LATBbits.LATB3 = 0;
+delay_s(1);
+LATAbits.LATA0 = 0;
+LATBbits.LATB3 = 1;
+delay_s(1);
+LATAbits.LATA0 = 0;
+LATBbits.LATB3 = 0;
+
+UART_Write_Text((unsigned char *) "Hello World1\n");
+UART_Write_Text((unsigned char *) "Hello World2\n");
+UART_Write_Text((unsigned char *) "Hello World31\n");
+
+unsigned char counter;
+while (1) {
+
+
+
+
+if (strstr(UART_buffer, "STATUS") != (0)) {
+UART_clean_buffer();
+send_Status();
+} else if (strstr(UART_buffer, "ALA_ON") != (0)) {
+UART_clean_buffer();
+state = state | 0b00001000;
+} else if (strstr(UART_buffer, "ALA_OFF") != (0)) {
+UART_clean_buffer();
+state = state & ~0b00010000;
+state = state & ~0b00001000;
+state = state & ~0b00000010;
+} else if (strstr(UART_buffer, "BEEP") != (0)) {
+UART_clean_buffer();
+LATBbits.LATB4 = 0b1;
+delay_ms(250);
+LATBbits.LATB4 = 0b0;
+delay_ms(250);
+} else if (strstr(UART_buffer, "EXTRA_ON") != (0)) {
+UART_clean_buffer();
+state = state | 0b00000001;
+} else if (strstr(UART_buffer, "EXTRA_OFF") != (0)) {
+UART_clean_buffer();
+state = state & ~0b00000001;
+}
+
+# 138
+if (PORTAbits.RA1 != AC_POWER_old) {
+AC_POWER_old = PORTAbits.RA1;
+if (PORTAbits.RA1) {
+state = state | 0b00000100;
+state = state | 0b00000001;
+} else {
+state = state & ~0b00000100;
+state = state & ~0b00000001;
+}
+}
+
+if (PORTBbits.RB2 | PORTAbits.RA7) {
+LATBbits.LATB3 = 1;
+if ((state & 0b00001000) == 0b00001000) {
+state = state | 0b00010000;
+state = state | 0b00000010;
+state = state & ~0b00000001;
+}
+} else {
 LATBbits.LATB3 = 0;
 }
+
+if ((state & 0b00000010) == 0b00000010) {
+LATBbits.LATB4 = 0b1;
+} else {
+LATBbits.LATB4 = 0b0;
 }
 
-if (PORTAbits.RA7 != Motion_2_OldStatus) {
-Motion_2_OldStatus = PORTAbits.RA7;
-if (PORTAbits.RA7) {
-UART_Write_Text((unsigned char *) "MOTION 2 DETECTED\n");
+if ((state & 0b00000001) == 0b00000001) {
+LATBbits.LATB5 = 0b1;
 } else {
-UART_Write_Text((unsigned char *) "MOTION 2 no movement\n");
-}
+LATBbits.LATB5 = 0b0;
 }
 
-if (PORTAbits.RA1 != AC_Power_OldStatus) {
-AC_Power_OldStatus = PORTAbits.RA1;
-if (PORTAbits.RA1) {
-UART_Write_Text((unsigned char *) "AC POWER\n");
-} else {
-UART_Write_Text((unsigned char *) "DC POWER\n");
+if (state != old_state) {
+if ((state & 0b00000100) != (old_state & 0b00000100)) {
+LATBbits.LATB4 = 1;
+delay_ms(50);
+LATBbits.LATB4 = 0;
 }
+old_state = state;
+send_Status();
 }
+
 }
 
 }

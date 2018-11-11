@@ -1,1 +1,1 @@
- build/default/production/main.d  build/default/production/main.p1:  main.c config.h uart.h adc.h delay.h
+ build/default/production/main.d  build/default/production/main.p1:  main.c ic.h config.h uart.h adc.h delay.h defines.h

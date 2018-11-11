@@ -9,136 +9,176 @@
 #include <stdlib.h>
 
 #include "config.h"
+#include "defines.h"
 #include "delay.h"
 #include "uart.h"
 #include "adc.h"
+#include "ic.h"
 
-#define RF_M0 LATBbits.LB0
-#define RF_M1 LATBbits.LB1
+char state = 0;
+char old_state = 0b10000000;
+bit AC_POWER_old = 0b0;
 
-#define LED_1 LATAbits.LATA0 
-#define LED_2 LATBbits.LATB3
+void send_Status() {
 
-#define MOTION_1 PORTBbits.RB2 
-#define MOTION_2 PORTAbits.RA7
+        unsigned char buffer[10];
+    unsigned int adcValue;
+    unsigned int batValue;
+    adcValue = ADC_Get();
 
-#define AC_POWER PORTAbits.RA1
+    unsigned long temp = ((unsigned long) adcValue * (unsigned long) 5000);
+    batValue = temp / 1023;
+    itoa(buffer, batValue, 10);
+    UART_Write_Text(buffer);
+    
+    if ((state & STS_4_ALARM_TRI) == STS_4_ALARM_TRI) {
+        UART_Write_Text((uchar *) "|ON|");
+    } else {
+        UART_Write_Text((uchar *) "|OFF|");
+    }
 
-#define EXTRA LATB5 
-#define SIREN LATB4 
+    if ((state & STS_3_ALARM_EN) == STS_3_ALARM_EN) {
+        UART_Write_Text((uchar *) "ON|");
+    } else {
+        UART_Write_Text((uchar *) "OFF|");
+    }
 
-unsigned char Motion_1_OldStatus;
-unsigned char Motion_2_OldStatus;
-unsigned char AC_Power_OldStatus;
+    if ((state & STS_2_AC_POWER) == STS_2_AC_POWER) {
+        UART_Write_Text((uchar *) "AC|");
+    } else {
+        UART_Write_Text((uchar *) "DC|");
+    }
+
+    if ((state & STS_1_SIREN) == STS_1_SIREN) {
+        UART_Write_Text((uchar *) "ON|");
+    } else {
+        UART_Write_Text((uchar *) "OFF|");
+    }
+
+    if ((state & STS_0_EXTRA) == STS_0_EXTRA) {
+        UART_Write_Text((uchar *) "ON");
+    } else {
+        UART_Write_Text((uchar *) "OFF");
+    }
+
+       
+    //UART_Write_Text("4100");
+
+}
 
 void main(void) {
-
-    // IO Configuration
-    TRISAbits.RA0 = 0b0; // Led 1 output
-    TRISAbits.RA1 = 0b1; // Main Power Fail input
-    TRISAbits.RA2 = 0b1; // UART TX output
-    TRISAbits.RA3 = 0b1; // UART RX input
-    TRISAbits.RA4 = 0b1; // Aux Read from RF Module
-
-    TRISAbits.RA6 = 0b1; // Motion 3 Input
-    TRISAbits.RA7 = 0b1; // Motion 2 Input
-
-    TRISBbits.RB0 = 0b0; // CONFIG MO RF Module
-    TRISBbits.RB1 = 0b0; // CONFIG M1 RF Module
-    TRISBbits.RB2 = 0b1; // Motion 1 Input
-    TRISBbits.RB3 = 0b0; // Led 2 output
-    TRISBbits.RB4 = 0b0; // Siren Output   
-    TRISBbits.RB5 = 0b0; // Extra Output
-
-    // A/D Port Configuration bit 
-    ADCON1bits.PCFG3 = 0b0; //for RA6/AN3
-    ADCON1bits.PCFG2 = 0b1; //for RA4/AN2
-    ADCON1bits.PCFG1 = 0b1; //for RA1/AN1
-    ADCON1bits.PCFG0 = 0b1; //for RA0/AN0
-
-    //Set Frequency to 8Mhz
-    OSCCONbits.IRCF0 = 0b1;
-    OSCCONbits.IRCF1 = 0b1;
-    OSCCONbits.IRCF2 = 0b1;
-
-    //Enable PLL  - Frequency 8Mhz x 4(PLL)
-    OSCTUNEbits.PLLEN = 1;
-
-    UART_Init();
-    UART_clean_buffer();
-
-    ADC_Init();
 
     // READ FROM PORT
     // Write to LAT
 
-    //SET RF
-    RF_M0 = 0b0;
-    RF_M1 = 0b0;
+    IC_Init();
+    UART_Init();
+    ADC_Init();
+    
+    SIREN = 1;
+    delay_ms(50);
+    SIREN = 0;
 
-    LED_1 = 0;
-    LED_2 = 0;
-    delay_ms(1);
+    LED_BLUE = 1;
+    LED_RED = 0;
+    EXTRA = 1;
     delay_s(1);
-    delay_us(1);
-    LED_1 = 1;
-    LED_2 = 1;
-    delay_ms(1);
-    LED_1 = 0;
-    LED_2 = 0;
-    delay_ms(1);
+    LED_BLUE = 0;
+    LED_RED = 1;
+    EXTRA = 0;
+    delay_s(1);
+    LED_BLUE = 1;
+    LED_RED = 0;
+    delay_s(1);
+    LED_BLUE = 0;
+    LED_RED = 1;
+    delay_s(1);
+    LED_BLUE = 0;
+    LED_RED = 0;
 
-    UART_Write_Text((unsigned char *) "Hello World\n");
+     UART_Write_Text((unsigned char *) "Hello World1\n");
+     UART_Write_Text((unsigned char *) "Hello World2\n");
+     UART_Write_Text((unsigned char *) "Hello World31\n");
 
+     unsigned char counter;
     while (1) {
 
-        if (strstr(UART_buffer, "BAT-------------") != NULL) {
+        ///////////////////////////////////////////////////////////
+        // Request Processor 
+        //////////////////////////////////////////////////////////
+        if (strstr(UART_buffer, "STATUS") != NULL) {
             UART_clean_buffer();
-            UART_Write_Text((unsigned char *) "ADC VALUE:");
-            unsigned char buffer[10];
-            unsigned int adcValue;
-            adcValue = ADC_Get();
-            itoa(buffer, adcValue, 10);
-            UART_Write_Text(buffer);
-            UART_Write_Text((unsigned char *) "\n");
-        } else if (strstr(UART_buffer, "LEDON") != NULL) {
+            send_Status();
+        } else if (strstr(UART_buffer, "ALA_ON") != NULL) {
             UART_clean_buffer();
-            LED_1 = 1;
-            UART_Write_Text((unsigned char *) "LED ON\n");
-        } else if (strstr(UART_buffer, "LEDOFF") != NULL) {
+            state = state | STS_3_ALARM_EN;
+        } else if (strstr(UART_buffer, "ALA_OFF") != NULL) {
             UART_clean_buffer();
-            LED_1 = 0;
-            UART_Write_Text((unsigned char *) "LED OFF\n");
+            state = state & ~STS_4_ALARM_TRI;
+            state = state & ~STS_3_ALARM_EN;
+            state = state & ~STS_1_SIREN;
+        } else if (strstr(UART_buffer, "BEEP") != NULL) {
+            UART_clean_buffer();
+            SIREN = 0b1;
+            delay_ms(250);
+            SIREN = 0b0;
+            delay_ms(250);
+        } else if (strstr(UART_buffer, "EXTRA_ON") != NULL) {
+            UART_clean_buffer();
+            state = state | STS_0_EXTRA;
+        } else if (strstr(UART_buffer, "EXTRA_OFF") != NULL) {
+            UART_clean_buffer();
+            state = state & ~STS_0_EXTRA;
         }
 
-        if (MOTION_1 != Motion_1_OldStatus) {
-            Motion_1_OldStatus = MOTION_1;
-            if (MOTION_1) {
-                UART_Write_Text((unsigned char *) "MOTION 1 DETECTED\n");
-                LED_2 = 1;
-            } else {
-                UART_Write_Text((unsigned char *) "MOTION 1 NO MOVEMENT\n");
-                LED_2 = 0;
-            }
-        }
+        ///////////////////////////////////////////////////////////
+        // State Processor 
+        //////////////////////////////////////////////////////////
 
-        if (MOTION_2 != Motion_2_OldStatus) {
-            Motion_2_OldStatus = MOTION_2;
-            if (MOTION_2) {
-                UART_Write_Text((unsigned char *) "MOTION 2 DETECTED\n");
-            } else {
-                UART_Write_Text((unsigned char *) "MOTION 2 no movement\n");
-            }
-        }
-
-        if (AC_POWER != AC_Power_OldStatus) {
-            AC_Power_OldStatus = AC_POWER;
+        if (AC_POWER != AC_POWER_old) {
+            AC_POWER_old = AC_POWER;
             if (AC_POWER) {
-                UART_Write_Text((unsigned char *) "AC POWER\n");
+                state = state | STS_2_AC_POWER;
+                state = state | STS_0_EXTRA;
             } else {
-                UART_Write_Text((unsigned char *) "DC POWER\n");
+                state = state & ~STS_2_AC_POWER;
+                state = state & ~STS_0_EXTRA;
             }
         }
+
+        if (MOTION_1 | MOTION_2) {
+            LED_RED = 1;
+            if ((state & STS_3_ALARM_EN) == STS_3_ALARM_EN) {
+                state = state | STS_4_ALARM_TRI;
+                state = state | STS_1_SIREN;
+                state = state & ~STS_0_EXTRA;
+            }
+        } else {
+            LED_RED = 0;
+        }
+
+        if ((state & STS_1_SIREN) == STS_1_SIREN) {
+            SIREN = 0b1;
+        } else {
+            SIREN = 0b0;
+        }
+
+        if ((state & STS_0_EXTRA) == STS_0_EXTRA) {
+            EXTRA = 0b1;
+        } else {
+            EXTRA = 0b0;
+        }
+
+         if (state != old_state) {
+            if ((state & STS_2_AC_POWER) != (old_state & STS_2_AC_POWER)) {
+                SIREN = 1;
+                delay_ms(50);
+                SIREN = 0;
+            }
+            old_state = state;
+            send_Status();
+        }
+
     }
 
 }

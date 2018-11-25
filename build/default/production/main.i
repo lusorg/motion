@@ -3474,7 +3474,7 @@ UART_Buffer_Ptr = 0;
 void interrupt UART_add_buffer() {
 
 
-LATAbits.LATA0 = 1;
+LATBbits.LATB3 = 1;
 if (PIR1bits.RCIF) {
 
 # 64
@@ -3486,7 +3486,7 @@ UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr - (unsigned cha
 PIR1bits.RCIF = 0;
 
 }
-LATAbits.LATA0 = 0;
+LATBbits.LATB3 = 0;
 }
 
 # 8 "adc.h"
@@ -3559,6 +3559,8 @@ OSCCONbits.IRCF2 = 0b1;
 
 OSCTUNEbits.PLLEN = 1;
 
+T0CONbits.TMR0ON = 0;
+
 
 LATBbits.LATB0 = 0b0;
 LATBbits.LATB1 = 0b0;
@@ -3570,13 +3572,17 @@ LATBbits.LATB5 = 0b0;
 # 18 "main.c"
 char state = 0;
 char old_state = 0b10000000;
-bit AC_POWER_old = 0b0;
-
-void send_Status() {
-
+bit AC_POWER_OLD = 0b0;
 unsigned char buffer[10];
 unsigned int adcValue;
 unsigned int batValue;
+unsigned char cycleAlarm = 10;
+unsigned char cycleAlarmCounter = 0;
+unsigned char allArmed = 0;
+
+void send_Status() {
+
+
 adcValue = ADC_Get();
 
 unsigned long temp = ((unsigned long) adcValue * (unsigned long) 5000);
@@ -3632,22 +3638,22 @@ LATBbits.LATB4 = 1;
 delay_ms(50);
 LATBbits.LATB4 = 0;
 
-LATAbits.LATA0 = 1;
-LATBbits.LATB3 = 0;
+LATBbits.LATB3 = 1;
+LATAbits.LATA0 = 0;
 LATBbits.LATB5 = 1;
 delay_s(1);
-LATAbits.LATA0 = 0;
-LATBbits.LATB3 = 1;
+LATBbits.LATB3 = 0;
+LATAbits.LATA0 = 1;
 LATBbits.LATB5 = 0;
 delay_s(1);
-LATAbits.LATA0 = 1;
-LATBbits.LATB3 = 0;
-delay_s(1);
-LATAbits.LATA0 = 0;
 LATBbits.LATB3 = 1;
-delay_s(1);
 LATAbits.LATA0 = 0;
+delay_s(1);
 LATBbits.LATB3 = 0;
+LATAbits.LATA0 = 1;
+delay_s(1);
+LATBbits.LATB3 = 0;
+LATAbits.LATA0 = 0;
 
 UART_Write_Text((unsigned char *) "Hello World1\n");
 UART_Write_Text((unsigned char *) "Hello World2\n");
@@ -3659,52 +3665,87 @@ while (1) {
 
 
 
-if (strstr(UART_buffer, "STATUS") != (0)) {
+if (strstr(UART_buffer, "0_STATUS") != (0) | strstr(UART_buffer, "ALL_STATUS") != (0)) {
 UART_clean_buffer();
 send_Status();
-} else if (strstr(UART_buffer, "ALA_ON") != (0)) {
+} else if (strstr(UART_buffer, "0_ALA_ON") != (0) | strstr(UART_buffer, "ALL_ALA_ON") != (0)) {
 UART_clean_buffer();
 state = state | 0b00001000;
-} else if (strstr(UART_buffer, "ALA_OFF") != (0)) {
+} else if (strstr(UART_buffer, "0_ALA_OFF") != (0) | strstr(UART_buffer, "ALL_ALA_OFF") != (0)) {
 UART_clean_buffer();
 state = state & ~0b00010000;
 state = state & ~0b00001000;
 state = state & ~0b00000010;
-} else if (strstr(UART_buffer, "BEEP") != (0)) {
+allArmed = 0;
+} else if (strstr(UART_buffer, "0_SIREN_OFF") != (0) | strstr(UART_buffer, "ALL_SIREN_OFF") != (0)) {
+UART_clean_buffer();
+state = state & ~0b00000010;
+} else if (strstr(UART_buffer, "0_SIREN_ON") != (0) | strstr(UART_buffer, "ALL_SIREN_ON") != (0)) {
+UART_clean_buffer();
+state = state | 0b00000010;
+} else if (strstr(UART_buffer, "0_BEEP") != (0) | strstr(UART_buffer, "ALL_BEEP") != (0)) {
 UART_clean_buffer();
 LATBbits.LATB4 = 0b1;
 delay_ms(250);
 LATBbits.LATB4 = 0b0;
 delay_ms(250);
-} else if (strstr(UART_buffer, "EXTRA_ON") != (0)) {
+} else if (strstr(UART_buffer, "0_EXTRA_ON") != (0) | strstr(UART_buffer, "ALL_EXTRA_ON") != (0)) {
 UART_clean_buffer();
 state = state | 0b00000001;
-} else if (strstr(UART_buffer, "EXTRA_OFF") != (0)) {
+} else if (strstr(UART_buffer, "0_EXTRA_OFF") != (0) | strstr(UART_buffer, "ALL_EXTRA_OFF") != (0)) {
 UART_clean_buffer();
 state = state & ~0b00000001;
 }
 
-# 138
-if (PORTAbits.RA1 != AC_POWER_old) {
-AC_POWER_old = PORTAbits.RA1;
+# 149
+if (PORTAbits.RA1 != AC_POWER_OLD) {
+AC_POWER_OLD = PORTAbits.RA1;
 if (PORTAbits.RA1) {
 state = state | 0b00000100;
-state = state | 0b00000001;
 } else {
 state = state & ~0b00000100;
-state = state & ~0b00000001;
 }
 }
 
-if (PORTBbits.RB2 | PORTAbits.RA7) {
-LATBbits.LATB3 = 1;
+if (PORTBbits.RB2 | PORTAbits.RA7 | ((state & 0b00010000) == 0b00010000) ) {
+LATAbits.LATA0 = 1;
 if ((state & 0b00001000) == 0b00001000) {
-state = state | 0b00010000;
+if ((state & 0b00010000) == 0b00010000) {
+if (TMR0IF) {
+if(cycleAlarmCounter == cycleAlarm){
 state = state | 0b00000010;
 state = state & ~0b00000001;
+if(allArmed == 0){
+allArmed = 1;
+UART_Write_Text((unsigned char *) "ALL_SIREN_ON");
+}
+}
+else{
+cycleAlarmCounter = cycleAlarmCounter + 1;
+TMR0IF = 0;
+}
+}
+}
+else {
+cycleAlarmCounter = 0;
+state = state | 0b00010000;
+T0CONbits.TMR0ON = 0b0;
+TMR0L = 0;
+TMR0H = 0;
+T0CONbits.T016BIT = 0b0;
+T0CONbits.T0CS = 0b0;
+T0CONbits.PSA = 0b0;
+T0CONbits.T0PS = 0b111;
+T0CONbits.TMR0ON = 0b1;
+TMR0IF = 0;
+LATBbits.LATB4 = 0b1;
+delay_ms(100);
+LATBbits.LATB4 = 0b0;
+delay_ms(100);
+}
 }
 } else {
-LATBbits.LATB3 = 0;
+LATAbits.LATA0 = 0;
 }
 
 if ((state & 0b00000010) == 0b00000010) {

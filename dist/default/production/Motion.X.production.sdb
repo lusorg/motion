@@ -57,9 +57,9 @@
 [v _delay_s delay_s `(v  1 e 1 0 ]
 "2 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\ic.h
 [v _IC_Init IC_Init `(v  1 e 1 0 ]
-"22 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
+"28 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
 [v _send_Status send_Status `(v  1 e 1 0 ]
-"69
+"73
 [v _main main `(v  1 e 1 0 ]
 "12 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\uart.h
 [v _UART_Init UART_Init `(v  1 e 1 0 ]
@@ -81,7 +81,7 @@
 `uc 1 RA7 1 0 :1:7 
 ]
 "119 C:\Program Files (x86)\Microchip\xc8\v2.00\pic\include\pic18f1330.h
-[s S671 . 1 `uc 1 AN0 1 0 :1:0 
+[s S704 . 1 `uc 1 AN0 1 0 :1:0 
 `uc 1 AN1 1 0 :1:1 
 `uc 1 TX 1 0 :1:2 
 `uc 1 RX 1 0 :1:3 
@@ -90,7 +90,7 @@
 `uc 1 OSC2 1 0 :1:6 
 `uc 1 OSC1 1 0 :1:7 
 ]
-[s S680 . 1 `uc 1 INT0 1 0 :1:0 
+[s S713 . 1 `uc 1 INT0 1 0 :1:0 
 `uc 1 INT1 1 0 :1:1 
 `uc 1 CK 1 0 :1:2 
 `uc 1 DT 1 0 :1:3 
@@ -99,7 +99,7 @@
 `uc 1 CLKO 1 0 :1:6 
 `uc 1 CLKI 1 0 :1:7 
 ]
-[s S689 . 1 `uc 1 KBI0 1 0 :1:0 
+[s S722 . 1 `uc 1 KBI0 1 0 :1:0 
 `uc 1 KBI1 1 0 :1:1 
 `uc 1 . 1 0 :2:2 
 `uc 1 VREFP 1 0 :1:4 
@@ -107,25 +107,25 @@
 `uc 1 T1OSO 1 0 :1:6 
 `uc 1 T1OSI 1 0 :1:7 
 ]
-[s S697 . 1 `uc 1 . 1 0 :5:0 
+[s S730 . 1 `uc 1 . 1 0 :5:0 
 `uc 1 NOT_MCLR 1 0 :1:5 
 ]
-[s S700 . 1 `uc 1 CMP0 1 0 :1:0 
+[s S733 . 1 `uc 1 CMP0 1 0 :1:0 
 `uc 1 . 1 0 :4:1 
 `uc 1 nMCLR 1 0 :1:5 
 `uc 1 AN3 1 0 :1:6 
 ]
-[s S705 . 1 `uc 1 . 1 0 :6:0 
+[s S738 . 1 `uc 1 . 1 0 :6:0 
 `uc 1 T1CKI 1 0 :1:6 
 ]
-[s S708 . 1 `uc 1 ULPWUIN 1 0 :1:0 
+[s S741 . 1 `uc 1 ULPWUIN 1 0 :1:0 
 `uc 1 . 1 0 :4:1 
 `uc 1 LVDIN 1 0 :1:5 
 `uc 1 . 1 0 :1:6 
 `uc 1 RJPU 1 0 :1:7 
 ]
-[u S714 . 1 `S480 1 . 1 0 `S671 1 . 1 0 `S680 1 . 1 0 `S689 1 . 1 0 `S697 1 . 1 0 `S700 1 . 1 0 `S705 1 . 1 0 `S708 1 . 1 0 ]
-[v _PORTAbits PORTAbits `VES714  1 e 1 @3968 ]
+[u S747 . 1 `S480 1 . 1 0 `S704 1 . 1 0 `S713 1 . 1 0 `S722 1 . 1 0 `S730 1 . 1 0 `S733 1 . 1 0 `S738 1 . 1 0 `S741 1 . 1 0 ]
+[v _PORTAbits PORTAbits `VES747  1 e 1 @3968 ]
 [s S520 . 1 `uc 1 RB0 1 0 :1:0 
 `uc 1 RB1 1 0 :1:1 
 `uc 1 RB2 1 0 :1:2 
@@ -136,7 +136,7 @@
 `uc 1 RB7 1 0 :1:7 
 ]
 "357
-[s S785 . 1 `uc 1 PWM0 1 0 :1:0 
+[s S818 . 1 `uc 1 PWM0 1 0 :1:0 
 `uc 1 PWM1 1 0 :1:1 
 `uc 1 INT2 1 0 :1:2 
 `uc 1 INT3 1 0 :1:3 
@@ -145,30 +145,30 @@
 `uc 1 PWM4 1 0 :1:6 
 `uc 1 PWM5 1 0 :1:7 
 ]
-[s S794 . 1 `uc 1 . 1 0 :2:0 
+[s S827 . 1 `uc 1 . 1 0 :2:0 
 `uc 1 KBI2 1 0 :1:2 
 `uc 1 KBI3 1 0 :1:3 
 `uc 1 . 1 0 :2:4 
 `uc 1 PGC 1 0 :1:6 
 `uc 1 PGD 1 0 :1:7 
 ]
-[s S801 . 1 `uc 1 . 1 0 :2:0 
+[s S834 . 1 `uc 1 . 1 0 :2:0 
 `uc 1 CMP2 1 0 :1:2 
 `uc 1 CMP1 1 0 :1:3 
 ]
-[s S805 . 1 `uc 1 . 1 0 :2:0 
+[s S838 . 1 `uc 1 . 1 0 :2:0 
 `uc 1 T1OSO 1 0 :1:2 
 `uc 1 T1OSI 1 0 :1:3 
 ]
-[s S809 . 1 `uc 1 . 1 0 :2:0 
+[s S842 . 1 `uc 1 . 1 0 :2:0 
 `uc 1 T1CKI 1 0 :1:2 
 ]
-[s S812 . 1 `uc 1 . 1 0 :3:0 
+[s S845 . 1 `uc 1 . 1 0 :3:0 
 `uc 1 CCP2_PA2 1 0 :1:3 
 ]
-[u S815 . 1 `S520 1 . 1 0 `S785 1 . 1 0 `S794 1 . 1 0 `S801 1 . 1 0 `S805 1 . 1 0 `S809 1 . 1 0 `S812 1 . 1 0 ]
-[v _PORTBbits PORTBbits `VES815  1 e 1 @3969 ]
-[s S269 . 1 `uc 1 LATA0 1 0 :1:0 
+[u S848 . 1 `S520 1 . 1 0 `S818 1 . 1 0 `S827 1 . 1 0 `S834 1 . 1 0 `S838 1 . 1 0 `S842 1 . 1 0 `S845 1 . 1 0 ]
+[v _PORTBbits PORTBbits `VES848  1 e 1 @3969 ]
+[s S649 . 1 `uc 1 LATA0 1 0 :1:0 
 `uc 1 LATA1 1 0 :1:1 
 `uc 1 LATA2 1 0 :1:2 
 `uc 1 LATA3 1 0 :1:3 
@@ -178,7 +178,7 @@
 `uc 1 LATA7 1 0 :1:7 
 ]
 "883
-[s S278 . 1 `uc 1 LA0 1 0 :1:0 
+[s S658 . 1 `uc 1 LA0 1 0 :1:0 
 `uc 1 LA1 1 0 :1:1 
 `uc 1 LA2 1 0 :1:2 
 `uc 1 LA3 1 0 :1:3 
@@ -187,9 +187,9 @@
 `uc 1 LA6 1 0 :1:6 
 `uc 1 LA7 1 0 :1:7 
 ]
-[u S287 . 1 `S269 1 . 1 0 `S278 1 . 1 0 ]
-[v _LATAbits LATAbits `VES287  1 e 1 @3977 ]
-[s S609 . 1 `uc 1 LATB0 1 0 :1:0 
+[u S667 . 1 `S649 1 . 1 0 `S658 1 . 1 0 ]
+[v _LATAbits LATAbits `VES667  1 e 1 @3977 ]
+[s S269 . 1 `uc 1 LATB0 1 0 :1:0 
 `uc 1 LATB1 1 0 :1:1 
 `uc 1 LATB2 1 0 :1:2 
 `uc 1 LATB3 1 0 :1:3 
@@ -199,7 +199,7 @@
 `uc 1 LATB7 1 0 :1:7 
 ]
 "995
-[s S618 . 1 `uc 1 LB0 1 0 :1:0 
+[s S278 . 1 `uc 1 LB0 1 0 :1:0 
 `uc 1 LB1 1 0 :1:1 
 `uc 1 LB2 1 0 :1:2 
 `uc 1 LB3 1 0 :1:3 
@@ -208,8 +208,8 @@
 `uc 1 LB6 1 0 :1:6 
 `uc 1 LB7 1 0 :1:7 
 ]
-[u S627 . 1 `S609 1 . 1 0 `S618 1 . 1 0 ]
-[v _LATBbits LATBbits `VES627  1 e 1 @3978 ]
+[u S287 . 1 `S269 1 . 1 0 `S278 1 . 1 0 ]
+[v _LATBbits LATBbits `VES287  1 e 1 @3978 ]
 [s S471 . 1 `uc 1 TRISA0 1 0 :1:0 
 `uc 1 TRISA1 1 0 :1:1 
 `uc 1 TRISA2 1 0 :1:2 
@@ -445,6 +445,27 @@
 ]
 [u S565 . 1 `S551 1 . 1 0 `S557 1 . 1 0 ]
 [v _OSCCONbits OSCCONbits `VES565  1 e 1 @4051 ]
+[s S609 . 1 `uc 1 T0PS 1 0 :3:0 
+`uc 1 PSA 1 0 :1:3 
+`uc 1 T0SE 1 0 :1:4 
+`uc 1 T0CS 1 0 :1:5 
+`uc 1 T016BIT 1 0 :1:6 
+`uc 1 TMR0ON 1 0 :1:7 
+]
+"4032
+[s S616 . 1 `uc 1 T0PS0 1 0 :1:0 
+`uc 1 T0PS1 1 0 :1:1 
+`uc 1 T0PS2 1 0 :1:2 
+]
+[s S620 . 1 `uc 1 . 1 0 :6:0 
+`uc 1 T08BIT 1 0 :1:6 
+]
+[u S623 . 1 `S609 1 . 1 0 `S616 1 . 1 0 `S620 1 . 1 0 ]
+[v _T0CONbits T0CONbits `VES623  1 e 1 @4053 ]
+"4094
+[v _TMR0L TMR0L `VEuc  1 e 1 @4054 ]
+"4101
+[v _TMR0H TMR0H `VEuc  1 e 1 @4055 ]
 [s S58 . 1 `uc 1 RBIF 1 0 :1:0 
 `uc 1 INT0IF 1 0 :1:1 
 `uc 1 TMR0IF 1 0 :1:2 
@@ -470,6 +491,8 @@
 ]
 [u S80 . 1 `S58 1 . 1 0 `S67 1 . 1 0 `S76 1 . 1 0 ]
 [v _INTCONbits INTCONbits `VES80  1 e 1 @4082 ]
+"5896
+[v _TMR0IF TMR0IF `VEb  1 e 0 @32658 ]
 "5971
 [v _TRMT TRMT `VEb  1 e 0 @32097 ]
 "18 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
@@ -477,15 +500,27 @@
 "19
 [v _old_state old_state `uc  1 e 1 0 ]
 "20
-[v _AC_POWER_old AC_POWER_old `b  1 e 0 0 ]
+[v _AC_POWER_OLD AC_POWER_OLD `b  1 e 0 0 ]
+"21
+[v _buffer buffer `[10]uc  1 e 10 0 ]
+"22
+[v _adcValue adcValue `ui  1 e 2 0 ]
+"23
+[v _batValue batValue `ui  1 e 2 0 ]
+"24
+[v _cycleAlarm cycleAlarm `uc  1 e 1 0 ]
+"25
+[v _cycleAlarmCounter cycleAlarmCounter `uc  1 e 1 0 ]
+"26
+[v _allArmed allArmed `uc  1 e 1 0 ]
 "9 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\uart.h
 [v _UART_buffer UART_buffer `[16]uc  1 e 16 0 ]
 "10
 [v _UART_Buffer_Ptr UART_Buffer_Ptr `uc  1 e 1 0 ]
-"69 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
+"73 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
 [v _main main `(v  1 e 1 0 ]
 {
-"184
+"223
 } 0
 "4 C:\Program Files (x86)\Microchip\xc8\v2.00\pic\sources\c90\common\strstr.c
 [v _strstr strstr `(*.39uc  1 e 2 0 ]
@@ -518,18 +553,12 @@
 [v strchr@chr chr `i  1 p 2 6 ]
 "11
 } 0
-"22 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
+"28 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\main.c
 [v _send_Status send_Status `(v  1 e 1 0 ]
 {
-"24
-[v send_Status@buffer buffer `[10]uc  1 a 10 28 ]
-"29
-[v send_Status@temp temp `ul  1 a 4 38 ]
-"26
-[v send_Status@batValue batValue `ui  1 a 2 44 ]
-"25
-[v send_Status@adcValue adcValue `ui  1 a 2 42 ]
-"67
+"33
+[v send_Status@temp temp `ul  1 a 4 28 ]
+"71
 } 0
 "4 C:\Program Files (x86)\Microchip\xc8\v2.00\pic\sources\c90\common\itoa.c
 [v _itoa itoa `(*.39uc  1 e 2 0 ]
@@ -661,7 +690,7 @@
 "2 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\ic.h
 [v _IC_Init IC_Init `(v  1 e 1 0 ]
 {
-"40
+"42
 } 0
 "8 C:\Users\me\Documents\MEGAsync\electro\GIT\Motion\Motion.X\adc.h
 [v _ADC_Init ADC_Init `(v  1 e 1 0 ]

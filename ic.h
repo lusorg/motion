@@ -31,6 +31,8 @@ void IC_Init(){
     //Enable PLL  - Frequency 8Mhz x 4(PLL)
     OSCTUNEbits.PLLEN = 1;
     
+    T0CONbits.TMR0ON = 0;
+    
     //SET RF
     RF_M0 = 0b0;
     RF_M1 = 0b0;

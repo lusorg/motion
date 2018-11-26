@@ -3428,67 +3428,6 @@ delay_ms(1000);
 }
 }
 
-# 9 "uart.h"
-char UART_buffer[16];
-unsigned char UART_Buffer_Ptr = 0;
-
-void UART_Init() {
-
-PIE1bits.RCIE = 0b1;
-INTCONbits.PEIE = 0b1;
-INTCONbits.GIE = 0b1;
-
-
-RCSTAbits.SPEN = 0b1;
-RCSTAbits.RX9 = 0b0;
-RCSTAbits.CREN = 0b1;
-
-TXSTAbits.TX9 = 0b0;
-TXSTAbits.SYNC = 0b0;
-TXSTAbits.BRGH = 0b0;
-TXSTAbits.TXEN = 0b1;
-
-BAUDCONbits.BRG16 = 0b0;
-BAUDCONbits.ABDEN = 0b0;
-SPBRG = 51;
-}
-
-void UART_Write_byte(unsigned char data) {
-while (!TRMT);
-TXREG = data;
-}
-
-void UART_Write_Text(unsigned char *text) {
-unsigned char toSend;
-for (int i = 0; text[i] != '\0'; i++){
-toSend = text[i];
-UART_Write_byte(toSend);
-}
-}
-
-void UART_clean_buffer() {
-memset(UART_buffer, 45, sizeof (UART_buffer));
-UART_Buffer_Ptr = 0;
-}
-
-void interrupt UART_add_buffer() {
-
-
-LATBbits.LATB3 = 1;
-if (PIR1bits.RCIF) {
-
-# 64
-UART_buffer[UART_Buffer_Ptr] = RCREG;
-UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr + (unsigned char)1);
-if (UART_Buffer_Ptr == 16)
-UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr - (unsigned char)1);
-
-PIR1bits.RCIF = 0;
-
-}
-LATBbits.LATB3 = 0;
-}
-
 # 8 "adc.h"
 void ADC_Init()
 {
@@ -3569,19 +3508,69 @@ LATBbits.LATB4 = 0b0;
 LATBbits.LATB5 = 0b0;
 }
 
-# 18 "main.c"
-char state = 0;
-char old_state = 0b10000000;
-bit AC_POWER_OLD = 0b0;
-unsigned char buffer[10];
-unsigned int adcValue;
-unsigned int batValue;
-unsigned char cycleAlarm = 10;
-unsigned char cycleAlarmCounter = 0;
+# 9 "uart.h"
+char UART_buffer[8];
+unsigned char UART_Buffer_Ptr = 0;
+unsigned char received_char = 0;
+
+
+char Status_Alarm_Triggered;
+char Status_Alarm_Enabled;
+char Status_Ac_power;
+char Status_Siren;
+char Status_Extra;
+
+char Status_Alarm_Triggered_old;
+char Status_Alarm_Enabled_old;
+char Status_Ac_power_old;
+char Status_Siren_old;
+char Status_Extra_old;
 unsigned char allArmed = 0;
 
-void send_Status() {
+void UART_Init() {
 
+PIE1bits.RCIE = 0b1;
+INTCONbits.PEIE = 0b1;
+INTCONbits.GIE = 0b1;
+
+
+RCSTAbits.SPEN = 0b1;
+RCSTAbits.RX9 = 0b0;
+RCSTAbits.CREN = 0b1;
+
+TXSTAbits.TX9 = 0b0;
+TXSTAbits.SYNC = 0b0;
+TXSTAbits.BRGH = 0b0;
+TXSTAbits.TXEN = 0b1;
+
+BAUDCONbits.BRG16 = 0b0;
+BAUDCONbits.ABDEN = 0b0;
+SPBRG = 51;
+}
+
+void UART_Write_byte(unsigned char data) {
+while (!TRMT);
+TXREG = data;
+}
+
+void UART_Write_Text(unsigned char *text) {
+unsigned char toSend;
+for (int i = 0; text[i] != '\0'; i++){
+toSend = text[i];
+UART_Write_byte(toSend);
+}
+}
+
+void UART_clean_buffer() {
+memset(UART_buffer, 45, sizeof (UART_buffer));
+UART_Buffer_Ptr = 0;
+received_char = 0;
+LATBbits.LATB3 = 0;
+}
+void send_Status() {
+unsigned int adcValue;
+unsigned int batValue;
+unsigned char buffer[10];
 
 adcValue = ADC_Get();
 
@@ -3590,40 +3579,59 @@ batValue = temp / 1023;
 itoa(buffer, batValue, 10);
 UART_Write_Text(buffer);
 
-if ((state & 0b00010000) == 0b00010000) {
+if (Status_Alarm_Triggered == 0b1) {
 UART_Write_Text((unsigned char *) "|ON|");
 } else {
 UART_Write_Text((unsigned char *) "|OFF|");
 }
 
-if ((state & 0b00001000) == 0b00001000) {
+if (Status_Alarm_Enabled == 0b1) {
 UART_Write_Text((unsigned char *) "ON|");
 } else {
 UART_Write_Text((unsigned char *) "OFF|");
 }
 
-if ((state & 0b00000100) == 0b00000100) {
+if (Status_Ac_power == 0b1) {
 UART_Write_Text((unsigned char *) "AC|");
 } else {
 UART_Write_Text((unsigned char *) "DC|");
 }
 
-if ((state & 0b00000010) == 0b00000010) {
+if (Status_Siren == 0b1) {
 UART_Write_Text((unsigned char *) "ON|");
 } else {
 UART_Write_Text((unsigned char *) "OFF|");
 }
 
-if ((state & 0b00000001) == 0b00000001) {
+if (Status_Extra == 0b1) {
 UART_Write_Text((unsigned char *) "ON");
 } else {
 UART_Write_Text((unsigned char *) "OFF");
 }
+}
+
+void interrupt UART_add_buffer() {
 
 
+LATBbits.LATB3 = 1;
+if (PIR1bits.RCIF) {
+UART_buffer[UART_Buffer_Ptr] = RCREG;
+received_char++;
+UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr + (unsigned char)1);
+if (UART_Buffer_Ptr == 8)
+UART_Buffer_Ptr = (unsigned char)((unsigned char)UART_Buffer_Ptr - (unsigned char)1);
+
+PIR1bits.RCIF = 0;
+}
 
 
 }
+
+# 20 "main.c"
+unsigned char cycleAlarm = 10;
+unsigned char cycleAlarmCounter = 0;
+
+char trash;
 
 void main(void) {
 
@@ -3659,76 +3667,75 @@ UART_Write_Text((unsigned char *) "Hello World1\n");
 UART_Write_Text((unsigned char *) "Hello World2\n");
 UART_Write_Text((unsigned char *) "Hello World31\n");
 
+for(int i=0;i<100;i++){
+trash = RCREG;
+UART_clean_buffer();
+}
+
 unsigned char counter;
 while (1) {
 
 
 
-
-if (strstr(UART_buffer, "0_STATUS") != (0) | strstr(UART_buffer, "ALL_STATUS") != (0)) {
+if (strstr(UART_buffer, "0_STATUS") != (0) | strstr(UART_buffer, "1_STATUS") != (0)) {
 UART_clean_buffer();
 send_Status();
-} else if (strstr(UART_buffer, "0_ALA_ON") != (0) | strstr(UART_buffer, "ALL_ALA_ON") != (0)) {
+} else if (strstr(UART_buffer, "0_ALAR_1") != (0) | strstr(UART_buffer, "1_ALAR_1") != (0)) {
 UART_clean_buffer();
-state = state | 0b00001000;
-} else if (strstr(UART_buffer, "0_ALA_OFF") != (0) | strstr(UART_buffer, "ALL_ALA_OFF") != (0)) {
+Status_Alarm_Enabled = 0b1;
+} else if (strstr(UART_buffer, "0_ALAR_0") != (0) | strstr(UART_buffer, "1_ALAR_0") != (0)) {
 UART_clean_buffer();
-state = state & ~0b00010000;
-state = state & ~0b00001000;
-state = state & ~0b00000010;
+Status_Alarm_Enabled = 0b0;
+Status_Alarm_Triggered = 0b0;
+Status_Siren = 0b0;
 allArmed = 0;
-} else if (strstr(UART_buffer, "0_SIREN_OFF") != (0) | strstr(UART_buffer, "ALL_SIREN_OFF") != (0)) {
+} else if (strstr(UART_buffer, "0_SIRN_0") != (0) | strstr(UART_buffer, "1_SIRN_0") != (0)) {
 UART_clean_buffer();
-state = state & ~0b00000010;
-} else if (strstr(UART_buffer, "0_SIREN_ON") != (0) | strstr(UART_buffer, "ALL_SIREN_ON") != (0)) {
+Status_Siren = 0b0;
+} else if (strstr(UART_buffer, "0_SIRN_1") != (0) | strstr(UART_buffer, "1_SIRN_1") != (0)) {
 UART_clean_buffer();
-state = state | 0b00000010;
-} else if (strstr(UART_buffer, "0_BEEP") != (0) | strstr(UART_buffer, "ALL_BEEP") != (0)) {
+Status_Siren = 0b1;
+} else if (strstr(UART_buffer, "0_BEEPER") != (0) | strstr(UART_buffer, "1_BEEPER") != (0)) {
 UART_clean_buffer();
 LATBbits.LATB4 = 0b1;
 delay_ms(250);
 LATBbits.LATB4 = 0b0;
 delay_ms(250);
-} else if (strstr(UART_buffer, "0_EXTRA_ON") != (0) | strstr(UART_buffer, "ALL_EXTRA_ON") != (0)) {
+} else if (strstr(UART_buffer, "0_XTRA_1") != (0) | strstr(UART_buffer, "1_XTRA_1") != (0)) {
 UART_clean_buffer();
-state = state | 0b00000001;
-} else if (strstr(UART_buffer, "0_EXTRA_OFF") != (0) | strstr(UART_buffer, "ALL_EXTRA_OFF") != (0)) {
+Status_Extra = 0b1;
+} else if (strstr(UART_buffer, "0_XTRA_0") != (0) | strstr(UART_buffer, "1_XTRA_0") != (0)) {
 UART_clean_buffer();
-state = state & ~0b00000001;
+Status_Extra = 0b0;
 }
 
-# 149
-if (PORTAbits.RA1 != AC_POWER_OLD) {
-AC_POWER_OLD = PORTAbits.RA1;
+# 105
 if (PORTAbits.RA1) {
-state = state | 0b00000100;
+Status_Ac_power = 0b1;
 } else {
-state = state & ~0b00000100;
-}
+Status_Ac_power = 0b0;
 }
 
-if (PORTBbits.RB2 | PORTAbits.RA7 | ((state & 0b00010000) == 0b00010000) ) {
+if (PORTBbits.RB2 | PORTAbits.RA7 | (Status_Alarm_Triggered == 0b1)) {
 LATAbits.LATA0 = 1;
-if ((state & 0b00001000) == 0b00001000) {
-if ((state & 0b00010000) == 0b00010000) {
+if (Status_Alarm_Enabled == 0b1) {
+Status_Extra = 0b0;
+if (Status_Alarm_Triggered == 0b1) {
 if (TMR0IF) {
-if(cycleAlarmCounter == cycleAlarm){
-state = state | 0b00000010;
-state = state & ~0b00000001;
-if(allArmed == 0){
+if (cycleAlarmCounter == cycleAlarm) {
+Status_Siren = 0b1;
+if (allArmed == 0) {
 allArmed = 1;
 UART_Write_Text((unsigned char *) "ALL_SIREN_ON");
 }
-}
-else{
-cycleAlarmCounter = cycleAlarmCounter + 1;
+} else {
+cycleAlarmCounter ++;
 TMR0IF = 0;
 }
 }
-}
-else {
+} else {
 cycleAlarmCounter = 0;
-state = state | 0b00010000;
+Status_Alarm_Triggered = 0b1;
 T0CONbits.TMR0ON = 0b0;
 TMR0L = 0;
 TMR0H = 0;
@@ -3744,32 +3751,40 @@ LATBbits.LATB4 = 0b0;
 delay_ms(100);
 }
 }
-} else {
+}
+else {
 LATAbits.LATA0 = 0;
 }
 
-if ((state & 0b00000010) == 0b00000010) {
+if (Status_Siren == 0b1) {
 LATBbits.LATB4 = 0b1;
 } else {
 LATBbits.LATB4 = 0b0;
 }
 
-if ((state & 0b00000001) == 0b00000001) {
+if (Status_Siren == 0b1) {
 LATBbits.LATB5 = 0b1;
 } else {
 LATBbits.LATB5 = 0b0;
 }
 
-if (state != old_state) {
-if ((state & 0b00000100) != (old_state & 0b00000100)) {
+if (Status_Ac_power != Status_Ac_power_old |
+Status_Alarm_Enabled != Status_Alarm_Enabled_old |
+Status_Alarm_Triggered != Status_Alarm_Triggered_old |
+Status_Extra != Status_Extra_old |
+Status_Siren != Status_Siren_old) {
+if (Status_Ac_power != Status_Ac_power_old) {
 LATBbits.LATB4 = 1;
 delay_ms(50);
 LATBbits.LATB4 = 0;
 }
-old_state = state;
+Status_Ac_power_old = Status_Ac_power;
+Status_Alarm_Enabled_old = Status_Alarm_Enabled;
+Status_Alarm_Triggered_old = Status_Alarm_Triggered;
+Status_Extra_old = Status_Extra;
+Status_Siren_old = Status_Siren;
 send_Status();
 }
 
 }
-
 }

@@ -12,15 +12,4 @@
 #define EXTRA LATBbits.LATB5 
 #define SIREN LATBbits.LATB4 
 
-//STATUS DEFINITION CHAR
-//|b7|b6|b5       |b4               |b3               |b2      |b1   |b0   |
-//|   | |         |Alarm_Triggered  |Alarm_Enabled    |AC_POWER|Siren|Extra|
-
-
-#define STS_4_ALARM_TRI 0b00010000
-#define STS_3_ALARM_EN  0b00001000
-#define STS_2_AC_POWER  0b00000100
-#define STS_1_SIREN     0b00000010
-#define STS_0_EXTRA     0b00000001
-
 #define uchar unsigned char
